@@ -1,5 +1,6 @@
 package me.brunocardozo.meusgastos.domain.service;
 
+import me.brunocardozo.meusgastos.domain.exception.ResourceBadRequestException;
 import me.brunocardozo.meusgastos.domain.exception.ResourceNotFoundException;
 import me.brunocardozo.meusgastos.domain.model.Usuario;
 import me.brunocardozo.meusgastos.domain.repository.UsuarioRepository;
@@ -7,11 +8,13 @@ import me.brunocardozo.meusgastos.dto.usuario.UsuarioRequestDTO;
 import me.brunocardozo.meusgastos.dto.usuario.UsuarioResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+@Service
 public class UsuarioService implements ICRUDService<UsuarioRequestDTO, UsuarioResponseDTO> {
     @Autowired
     private UsuarioRepository repository;
@@ -31,6 +34,8 @@ public class UsuarioService implements ICRUDService<UsuarioRequestDTO, UsuarioRe
     @Override
     public UsuarioResponseDTO cadastrar(UsuarioRequestDTO dto) {
         validarUsuario(dto);
+        Optional<Usuario> usuarioBanco = repository.findByEmail(dto.getEmail());
+        if (usuarioBanco.isPresent()) throw new ResourceBadRequestException("Email já cadastrado");
         Usuario usuario = mapper.map(dto, Usuario.class);
         usuario.setId(null);
         usuario = repository.save(usuario);
@@ -42,14 +47,16 @@ public class UsuarioService implements ICRUDService<UsuarioRequestDTO, UsuarioRe
         validarUsuario(dto);
         Usuario usuario = mapper.map(dto, Usuario.class);
         usuario.setId(id);
+        usuario.setDataCadastro(usuarioBanco.getDataCadastro());
         usuario.setDataInativacao(usuarioBanco.getDataInativacao());
         usuario = repository.save(usuario);
         return mapper.map(usuario, UsuarioResponseDTO.class);
     }
     @Override
     public void excluir(Long id) {
-        UsuarioResponseDTO usuarioEncontrado = obterPorId(id);
-        Usuario usuario = mapper.map(usuarioEncontrado, Usuario.class);
+        Optional<Usuario> usuarioBanco = repository.findById(id);
+        if (usuarioBanco.isEmpty()) throw new ResourceNotFoundException("Usuário não encontrado");
+        Usuario usuario = usuarioBanco.get();
         usuario.setDataInativacao(new Date());
         repository.save(usuario);
     }
