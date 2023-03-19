@@ -18,7 +18,22 @@ public class WebSecurityConfig {
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
-    private AuthenticationConfiguration authenticationConfiguration;
+    private AuthenticationConfiguration authConfig;
+    @Autowired
+    private UserDetailsSecurityServer userDetailsSecurityServer;
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.headers().frameOptions().disable().and()
+                .cors().and()
+                .csrf().disable()
+                .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
+                        .anyRequest().authenticated())
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+                .addFilter(new JwtAuthenticationFilter(authenticationManager(authConfig), jwtUtil))
+                .addFilter(new JwtAuthorizationFilter(authenticationManager(authConfig), jwtUtil, userDetailsSecurityServer));
+        return http.build();
+    }
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
@@ -26,19 +41,5 @@ public class WebSecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
-    }
-
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.headers().frameOptions().disable().and()
-                .cors().and()
-                .csrf().disable()
-                .authorizeHttpRequests((auth) ->
-                        auth.requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
-                                .anyRequest().authenticated()
-                )
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                .addFilter(new JwtAuthenticationFilter(authenticationManager(authenticationConfiguration), jwtUtil))
-                .addFilter(new JwtAuthorizationFilter(authenticationManager(authenticationConfiguration), jwtUtil));
-        return http.build();
     }
 }
