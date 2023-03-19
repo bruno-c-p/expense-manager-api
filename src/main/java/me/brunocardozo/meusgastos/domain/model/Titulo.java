@@ -18,9 +18,6 @@ public class Titulo {
     @JoinColumn(name = "id_usuario")
     private Usuario usuario;
     private TipoTitulo tipo;
-    // @ManyToOne
-    // @JoinColumn(name = "idCentroDeCusto")
-    // private CentroDeCusto centroDeCusto;
     @ManyToMany
     @JoinTable(
             name = "titulo_centro_de_custo",
