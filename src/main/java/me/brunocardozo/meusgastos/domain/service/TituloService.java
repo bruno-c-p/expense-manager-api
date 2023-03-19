@@ -24,14 +24,16 @@ public class TituloService implements ICRUDService<TituloRequestDTO, TituloRespo
     private ModelMapper mapper;
     @Override
     public List<TituloResponseDTO> obterTodos() {
-        List<Titulo> lista = repository.findAll();
+        List<Titulo> lista = repository.findByUsuario(obterUsuarioLogado());
         return lista.stream().map(titulo -> mapper.map(titulo, TituloResponseDTO.class)).toList();
     }
     @Override
     public TituloResponseDTO obterPorId(Long id) {
         Optional<Titulo> titulo = repository.findById(id);
-        return titulo.map(value -> mapper.map(value, TituloResponseDTO.class))
-                .orElseThrow(() -> new ResourceNotFoundException("Título não encontrado"));
+        if (titulo.isEmpty() || titulo.get().getUsuario().getId() != obterUsuarioLogado().getId()) {
+            throw new ResourceNotFoundException("Título não encontrado");
+        }
+        return mapper.map(titulo.get(), TituloResponseDTO.class);
     }
     @Override
     public TituloResponseDTO cadastrar(TituloRequestDTO dto) {
@@ -57,6 +59,11 @@ public class TituloService implements ICRUDService<TituloRequestDTO, TituloRespo
     public void excluir(Long id) {
         obterPorId(id);
         repository.deleteById(id);
+    }
+
+    public List<TituloResponseDTO> obterPorDataVencimento(String periodoInicial, String periodoFinal) {
+        List<Titulo> lista = repository.obterFluxoCaixaPorDataVencimento(periodoInicial, periodoFinal);
+        return lista.stream().map(titulo -> mapper.map(titulo, TituloResponseDTO.class)).toList();
     }
 
     private void validarTitulo(TituloRequestDTO dto) {
