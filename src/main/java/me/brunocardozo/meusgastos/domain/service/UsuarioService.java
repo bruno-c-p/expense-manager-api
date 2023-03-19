@@ -61,6 +61,12 @@ public class UsuarioService implements ICRUDService<UsuarioRequestDTO, UsuarioRe
         repository.save(usuario);
     }
 
+    public UsuarioResponseDTO obterPorEmail(String email) {
+        Optional<Usuario> usuario = repository.findByEmail(email);
+        return usuario.map(value -> mapper.map(value, UsuarioResponseDTO.class))
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+    }
+
     private void validarUsuario(UsuarioRequestDTO dto) {
         if (dto.getEmail() == null || dto.getSenha() == null) {
             throw new ResourceNotFoundException("Email e senha são obrigatórios");
