@@ -8,6 +8,7 @@ import me.brunocardozo.meusgastos.dto.usuario.UsuarioRequestDTO;
 import me.brunocardozo.meusgastos.dto.usuario.UsuarioResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -20,6 +21,8 @@ public class UsuarioService implements ICRUDService<UsuarioRequestDTO, UsuarioRe
     private UsuarioRepository repository;
     @Autowired
     private ModelMapper mapper;
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
     @Override
     public List<UsuarioResponseDTO> obterTodos() {
         List<Usuario> usuarios = repository.findAll();
@@ -38,6 +41,8 @@ public class UsuarioService implements ICRUDService<UsuarioRequestDTO, UsuarioRe
         if (usuarioBanco.isPresent()) throw new ResourceBadRequestException("Email já cadastrado");
         Usuario usuario = mapper.map(dto, Usuario.class);
         usuario.setId(null);
+        usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
+        usuario.setDataCadastro(new Date());
         usuario = repository.save(usuario);
         return mapper.map(usuario, UsuarioResponseDTO.class);
     }
@@ -46,6 +51,7 @@ public class UsuarioService implements ICRUDService<UsuarioRequestDTO, UsuarioRe
         UsuarioResponseDTO usuarioBanco = obterPorId(id);
         validarUsuario(dto);
         Usuario usuario = mapper.map(dto, Usuario.class);
+        usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         usuario.setId(id);
         usuario.setDataCadastro(usuarioBanco.getDataCadastro());
         usuario.setDataInativacao(usuarioBanco.getDataInativacao());
