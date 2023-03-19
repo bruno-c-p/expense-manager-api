@@ -1,6 +1,7 @@
 package me.brunocardozo.meusgastos.controller;
 
 import me.brunocardozo.meusgastos.domain.service.CentroDeCustoService;
+import me.brunocardozo.meusgastos.dto.centrodecusto.CentroDeCustoRequestDTO;
 import me.brunocardozo.meusgastos.dto.centrodecusto.CentroDeCustoResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,11 +24,11 @@ public class CentroDeCustoController {
         return ResponseEntity.ok(service.obterPorId(id));
     }
     @PostMapping
-    public ResponseEntity<CentroDeCustoResponseDTO> cadastrar(@RequestBody CentroDeCustoResponseDTO dto) {
+    public ResponseEntity<CentroDeCustoResponseDTO> cadastrar(@RequestBody CentroDeCustoRequestDTO dto) {
         return ResponseEntity.status(201).body(service.cadastrar(dto));
     }
     @PutMapping("/{id}")
-    public ResponseEntity<CentroDeCustoResponseDTO> atualizar(@PathVariable Long id, @RequestBody CentroDeCustoResponseDTO dto) {
+    public ResponseEntity<CentroDeCustoResponseDTO> atualizar(@PathVariable Long id, @RequestBody CentroDeCustoRequestDTO dto) {
         return ResponseEntity.ok(service.atualizar(id, dto));
     }
     @DeleteMapping("/{id}")
