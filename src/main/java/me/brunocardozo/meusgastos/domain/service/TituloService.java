@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,6 +39,7 @@ public class TituloService implements ICRUDService<TituloRequestDTO, TituloRespo
         Titulo titulo = mapper.map(dto, Titulo.class);
         titulo.setUsuario(obterUsuarioLogado());
         titulo.setId(null);
+        titulo.setDataCadastro(new Date());
         titulo = repository.save(titulo);
         return mapper.map(titulo, TituloResponseDTO.class);
     }
