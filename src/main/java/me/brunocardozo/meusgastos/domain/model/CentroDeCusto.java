@@ -19,7 +19,7 @@ public class CentroDeCusto {
     @ManyToOne
     @JoinColumn(name = "id_usuario")
     private Usuario usuario;
-    @ManyToMany(mappedBy = "centro_de_custo")
+    @ManyToMany(mappedBy = "centrosDeCustos")
     @JsonBackReference
     private List<Titulo> titulos;
 
