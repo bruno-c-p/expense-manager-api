@@ -22,14 +22,16 @@ public class CentroDeCustoService implements ICRUDService<CentroDeCustoRequestDT
     private ModelMapper mapper;
     @Override
     public List<CentroDeCustoResponseDTO> obterTodos() {
-        List<CentroDeCusto> lista = repository.findAll();
+        List<CentroDeCusto> lista = repository.findByUsuario(obterUsuarioLogado());
         return lista.stream().map(centroDeCusto -> mapper.map(centroDeCusto, CentroDeCustoResponseDTO.class)).toList();
     }
     @Override
     public CentroDeCustoResponseDTO obterPorId(Long id) {
         Optional<CentroDeCusto> centroDeCusto = repository.findById(id);
-        return centroDeCusto.map(value -> mapper.map(value, CentroDeCustoResponseDTO.class))
-                .orElseThrow(() -> new ResourceNotFoundException("Centro de custo não encontrado"));
+        if (centroDeCusto.isEmpty() || centroDeCusto.get().getUsuario().getId() != obterUsuarioLogado().getId()) {
+            throw new ResourceNotFoundException("Centro de custo não encontrado");
+        }
+        return mapper.map(centroDeCusto.get(), CentroDeCustoResponseDTO.class);
     }
     @Override
     public CentroDeCustoResponseDTO cadastrar(CentroDeCustoRequestDTO dto) {
