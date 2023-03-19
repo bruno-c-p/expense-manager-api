@@ -11,8 +11,6 @@ import me.brunocardozo.meusgastos.domain.model.Usuario;
 import me.brunocardozo.meusgastos.dto.usuario.LoginRequestDTO;
 import me.brunocardozo.meusgastos.dto.usuario.LoginResponseDTO;
 import me.brunocardozo.meusgastos.dto.usuario.UsuarioResponseDTO;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
@@ -25,10 +23,8 @@ import java.io.IOException;
 import java.util.Date;
 
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-    private final AuthenticationManager authenticationManager;
-    private final JwtUtil jwtUtil;
-    @Autowired
-    private ModelMapper mapper = new ModelMapper();
+    private AuthenticationManager authenticationManager;
+    private JwtUtil jwtUtil;
 
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
         super();
@@ -52,8 +48,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException {
         Usuario usuario = (Usuario) authResult.getPrincipal();
         String token = jwtUtil.gerarToken(authResult);
-        UsuarioResponseDTO usuarioResponseDTO = mapper.map(usuario, UsuarioResponseDTO.class);
-        LoginResponseDTO loginResponseDTO = new LoginResponseDTO(usuarioResponseDTO, "Bearer " + token);
+        LoginResponseDTO loginResponseDTO = new LoginResponseDTO(createUsuarioResponseDTO(usuario), "Bearer " + token);
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json");
         response.getWriter().write(new Gson().toJson(loginResponseDTO));
@@ -62,9 +57,20 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
         String dataHora = ConversorData.converterDateParaString(new Date());
         ErroResposta erro = new ErroResposta(dataHora, 401, "Unauthorized", failed.getMessage());
-        response.setStatus(401);
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json");
         response.getWriter().write(new Gson().toJson(erro));
+    }
+
+    private UsuarioResponseDTO createUsuarioResponseDTO(Usuario usuario) {
+        UsuarioResponseDTO usuarioResponseDTO = new UsuarioResponseDTO();
+        usuarioResponseDTO.setId(usuario.getId());
+        usuarioResponseDTO.setNome(usuario.getNome());
+        usuarioResponseDTO.setEmail(usuario.getEmail());
+        usuarioResponseDTO.setFoto(usuario.getFoto());
+        usuarioResponseDTO.setDataCadastro(usuario.getDataCadastro());
+        usuarioResponseDTO.setDataInativacao(usuario.getDataInativacao());
+        return usuarioResponseDTO;
     }
 }

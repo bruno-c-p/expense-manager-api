@@ -5,10 +5,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import me.brunocardozo.meusgastos.domain.model.Usuario;
-import me.brunocardozo.meusgastos.domain.service.UsuarioService;
-import me.brunocardozo.meusgastos.dto.usuario.UsuarioResponseDTO;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,14 +14,12 @@ import java.io.IOException;
 
 public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
     private JwtUtil jwtUtil;
-    @Autowired
-    private UsuarioService usuarioService;
-    @Autowired
-    private ModelMapper mapper = new ModelMapper();
+    private UserDetailsSecurityServer userDetailsSecurityServer;
 
-    public JwtAuthorizationFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+    public JwtAuthorizationFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil, UserDetailsSecurityServer userDetailsSecurityServer) {
         super(authenticationManager);
         this.jwtUtil = jwtUtil;
+        this.userDetailsSecurityServer = userDetailsSecurityServer;
     }
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
@@ -40,7 +34,7 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
     private UsernamePasswordAuthenticationToken getAuthentication(String token) {
         if (jwtUtil.isValidToken(token)) {
             String email = jwtUtil.getUsername(token);
-            Usuario usuario = mapper.map(usuarioService.obterPorEmail(email), Usuario.class);
+            Usuario usuario = (Usuario) userDetailsSecurityServer.loadUserByUsername(email);
             return new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
         }
         return null;
